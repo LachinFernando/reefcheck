@@ -2,13 +2,13 @@ import firebase_admin
 from firebase_admin import credentials, storage
 import streamlit as st
 
-STORAGE_BUCKET = "reefcheck-d6c55.firebasestorage.app"
+STORAGE_BUCKET = "reefchecktest.firebasestorage.app"
 
-def load_json(path: str):
-    # load your JSON key
-    with open(path) as f:
-        sa_info = json.load(f)
-    return sa_info
+
+sa_info = dict(st.secrets["gcp_service_account"])
+
+with open("serviceAccount.json", "w") as f:
+    f.write(json.dumps(sa_info))
 
 # authentication
 @st.cache_resource
