@@ -4,10 +4,16 @@ import streamlit as st
 
 STORAGE_BUCKET = "reefcheck-d6c55.firebasestorage.app"
 
+def load_json(path: str):
+    # load your JSON key
+    with open(path) as f:
+        sa_info = json.load(f)
+    return sa_info
+
 # authentication
 @st.cache_resource
 def get_database_session(url):
-    cred = credentials.Certificate("serviceAccount.json")
+    cred = credentials.Certificate(load_json("serviceAccount.json"))
     firebase_admin.initialize_app(cred, {
             'storageBucket': STORAGE_BUCKET
         })
