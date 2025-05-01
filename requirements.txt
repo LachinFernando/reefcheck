@@ -1,0 +1,9 @@
+Authlib==1.5.2
+firebase-admin==6.8.0
+google-auth==2.39.0
+google-cloud-firestore==2.20.2
+google-cloud-storage==3.1.0
+langchain==0.3.24
+langchain-core==0.3.56
+langchain-openai==0.3.14
+XlsxWriter==3.2.3
