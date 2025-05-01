@@ -15,7 +15,7 @@ with open("serviceAccount.json", "w") as f:
 # authentication
 @st.cache_resource
 def get_database_session(url):
-    cred = credentials.Certificate(load_json("serviceAccount.json"))
+    cred = credentials.Certificate("serviceAccount.json")
     firebase_admin.initialize_app(cred, {
             'storageBucket': STORAGE_BUCKET
         })
