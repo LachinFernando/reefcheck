@@ -33,14 +33,22 @@ class LabelRecordings(BaseModel):
 
 
 class SegmentationLabels(BaseModel):
-    labels: List[LabelRecordings]
+    segment_one: List[LabelRecordings]
+    segment_two: List[LabelRecordings]
+    segment_three: List[LabelRecordings]
+    segment_four: List[LabelRecordings]
 
 
 class LabelRecordingsFishInvert(BaseModel):
-    name: str
-    distance: str
-    count: str
-    clear: str
+    name: str = Field(None, description = "Species Name")
+    distance_one: int
+    distance_one_clear: bool 
+    distance_two: int 
+    distance_two_clear: bool 
+    distance_three: int 
+    distance_three_clear: bool 
+    distance_four: int 
+    distance_four_clear: bool
 
 
 class SegmentationLabelsFishInvert(BaseModel):
@@ -64,7 +72,7 @@ def image_label_generator(image_local_path: str, prompt: str = SLATE_IMAGE_INSTR
             {"type": "text", "text": prompt},
             {
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
+                "image_url": {"url": f"data:image/png;base64,{image_data}"},
             },
         ],
     )

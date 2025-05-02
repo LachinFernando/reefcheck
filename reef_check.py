@@ -3,7 +3,7 @@ import os
 import uuid
 
 from llm import image_label_generator, image_label_generator_fish_invert
-from utils import dataframe_creator, convert_csv_to_excel, fish_and_invert_dataframe_creator
+from utils import create_substrate_dataframe, substrate_excel_creation, load_and_prepare_excel_for_substrate, create_fish_slate_dataframe, fish_slate_excel_creation, load_and_prepare_excel_for_fish_slate
 from firebase import upload_file
 
 
@@ -11,7 +11,23 @@ from firebase import upload_file
 SUBSTRATE_IMAGE = "substrate.png"
 FISH_INVERT_IMAGE = "fish_and_invert.png"
 SUBSTRATE_CSV = "substrate.csv"
+SUBSTRATE_EXCEL = "substrate.xlsx"
 FISH_INVERT_CSV = "fish_and_invert.csv"
+FISH_INVERT_EXCEL = "fish_and_invert.xlsx"
+
+
+if 'file_uploader_one' not in st.session_state:
+    st.session_state['file_uploader_one'] = None
+if 'file_uploader_two' not in st.session_state:
+    st.session_state['file_uploader_two'] = None
+
+
+def on_file_one_uploaded():
+    st.session_state['file_uploader_one'] = False
+
+
+def on_file_two_uploaded():
+    st.session_state['file_uploader_two'] = False
 
 
 def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str, data_id: str) -> str:
@@ -22,9 +38,9 @@ def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str,
     if type_ == 'image':
         st.toast(f"Image Uploaded")
         return f"data/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
-    elif type_ == 'csv':
-        st.toast(f"CSV Uploaded")
-        return f"data/{slate_type}/{user_name_}_{user_id}/csv/{data_id}.csv"
+    elif type_ == 'excel':
+        st.toast(f"Excel Uploaded")
+        return f"data/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
 
 
 
@@ -46,9 +62,10 @@ def reef_analyser():
         uploaded_substrate = st.file_uploader(
             "Upload Substrate Image",
             type=["jpg", "jpeg", "png"],
-            key="substrate_uploader"
+            key="substrate_uploader",
+            on_change=on_file_one_uploaded
         )
-        if uploaded_substrate is not None:
+        if uploaded_substrate is not None and not st.session_state['file_uploader_one']:
             st.sidebar.image(uploaded_substrate, caption="Uploaded Substrate Image")
             # save the uploaded image
             save_uploaded_image(uploaded_substrate, SUBSTRATE_IMAGE)
@@ -57,16 +74,18 @@ def reef_analyser():
                 substrate_labels = image_label_generator(SUBSTRATE_IMAGE)
                 st.toast("Substrate Labels Generated")
                 # dataframe generation
-                substrate_df = dataframe_creator(substrate_labels, SUBSTRATE_CSV)
+                substrate_df = create_substrate_dataframe(substrate_labels.model_dump(), SUBSTRATE_CSV)
+                substrate_excel_creation(substrate_labels.model_dump(), SUBSTRATE_EXCEL)
                 # upload the file
                 data_id = str(uuid.uuid4())
-                upload_file(SUBSTRATE_CSV, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'csv', 'substrate', data_id))
+                upload_file(SUBSTRATE_EXCEL, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'substrate', data_id))
                 upload_file(SUBSTRATE_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'substrate', data_id))
                 st.dataframe(substrate_df)
+                st.session_state['file_uploader_one'] = True
                 # download button
                 st.download_button(
                     label="Download as Excel",
-                    data=convert_csv_to_excel(SUBSTRATE_CSV),
+                    data=load_and_prepare_excel_for_substrate(SUBSTRATE_EXCEL),
                     file_name='substrate_data.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     on_click='ignore'
@@ -78,9 +97,10 @@ def reef_analyser():
         uploaded_fish_invert = st.file_uploader(
             "Upload Fish and Invert Image",
             type=["jpg", "jpeg", "png"],
-            key="fish_invert_uploader"
+            key="fish_invert_uploader",
+            on_change=on_file_two_uploaded
         )
-        if uploaded_fish_invert is not None:
+        if uploaded_fish_invert is not None and not st.session_state['file_uploader_two']:
             st.sidebar.image(uploaded_fish_invert, caption="Uploaded Fish and Invert Image")
             # save the uploaded image
             save_uploaded_image(uploaded_fish_invert, FISH_INVERT_IMAGE)
@@ -89,16 +109,18 @@ def reef_analyser():
                 fish_and_invert_labels = image_label_generator_fish_invert(FISH_INVERT_IMAGE)
                 st.toast("Fish and Invert Labels Generated")
                 # dataframe generation
-                fish_and_invert_df = fish_and_invert_dataframe_creator(fish_and_invert_labels, FISH_INVERT_CSV)
+                fish_and_invert_df = create_fish_slate_dataframe(fish_and_invert_labels.model_dump(), FISH_INVERT_CSV)
+                fish_slate_excel_creation(fish_and_invert_labels.model_dump(), FISH_INVERT_EXCEL)
                 # upload the file
                 data_id = str(uuid.uuid4())
-                upload_file(FISH_INVERT_CSV, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'csv', 'fish_and_invert', data_id))
+                upload_file(FISH_INVERT_EXCEL, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', data_id))
                 upload_file(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', data_id))
                 st.dataframe(fish_and_invert_df)
+                st.session_state['file_uploader_two'] = True
                 # download button
                 st.download_button(
                     label="Download as Excel",
-                    data=convert_csv_to_excel(FISH_INVERT_CSV),
+                    data=load_and_prepare_excel_for_fish_slate(FISH_INVERT_EXCEL),
                     file_name='fish_and_invert_data.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     on_click='ignore'

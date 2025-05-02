@@ -21,6 +21,12 @@ Key rule for “no_label”:
 
 5. is completely blank
 
+segment details:
+segment one - 0 - 19.5m
+segment two - 25 - 44.5m
+segment three - 50 - 69.5m
+segment four - 75 - 94.5m
+
 Never invent a label for these cells.
 
 Guessing rule:
@@ -35,36 +41,28 @@ Example:
 """
 
 FISH_INVERT_INSTRUCTIONS =IMAGE_INSTRUCTIONS = """
-You will be shown a photo of a diver’s tally sheet. 
+You will be shown a photo of a diver’s tally sheet.
 
-The sheet lists various marine species in columns and four depth‐ranges in rows:
-0–20 m, 25–45 m, 50–70 m, 75–95 m.
+Input image: Image of the recordings
 
-For each depth‐range where a count is written, extract:
+Rotate the slate 90 degrees clockwise so headers read left-to-right.
 
-depth_range – one of "0–20 m", "25–45 m", "50–70 m", "75–95 m"
+Depth rows (exact text): 0–20 m (distance_one) · 25–45 m (distance_two) · 50–70 m (distance_three) · 75–95 m (distance_four)
 
-species – the printed column header (e.g. "Butterflyfish", "Grouper", "Crown of Thorns", "Trail urchin", etc.)
+For every species name below, inspect the cell at each depth and report:  
+• count – integer you see (digits are normally circled)  
+• *_clear – true if the numeral is crisp; false if faint, smudged or partly erased  
+• If the cell is totally blank write count 0 and *_clear true.
 
-count – the number handwritten in that cell
+Treat a circled “S” as the digit 5.
 
-clear – True if the numeral is crisp and unambiguous, false if it is smudged, faint, or partially erased
+Return **one JSON object** that matches the Pydantic model shown after
+the species list.  Do not add any other keys or text.
 
-Rules
-
-If a cell is blank → do not omit, but set the count as zero.
-
-If the digit is partially visible → include it but set "clear": False.
-
-Only use the exact species names as they appear in the header.
-
-If the header is sub divided again, use the main header and the sub divided header as the name.
-Ex:
-Trash --> Fish nets
-Trash --> general
-Names can be: 
-Trash-fishnets
-Trash-general
-
-Do not omit when the count is zero for species.
+Species list (verbatim)  
+Fish – Butterflyfish · Sweetlips · Snapper · Barramundi cod · Humphead wrasse · Bumphead parrotfish · Other parrotfish · Moray eel · Grouper 30-40 cm · Grouper 40-50 cm · Grouper 50-60 cm · Grouper > 60 cm  
+Invertebrates – Banded coral shrimp · Diadema urchin · Pencil urchin · Collector urchin · Sea cucumber · Crown of Thorns · Triton · Lobster · Giant Clam < 10 cm · Giant Clam 10-20 cm · Giant Clam 20-30 cm · Giant Clam 30-40 cm · Giant Clam 40-50 cm · Giant Clam > 50 cm  
+Impacts – Coral Damage – boat/anchor · Coral Damage – dynamite · Coral Damage – other · Trash – fish nets · Trash – general · Bleaching % population · Bleaching % colony  
+Coral Disease – Black Band % colonies · White band % colonies  
+Rare Animals – Shark · Turtle · Manta · Other
 """
