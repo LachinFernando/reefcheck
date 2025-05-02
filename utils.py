@@ -1,84 +1,142 @@
 from collections import defaultdict
 import pandas as pd
 from io import BytesIO
+import xlsxwriter
+from openpyxl import load_workbook
 
 
-def dataframe_creator(response: dict, csv_name: str) -> pd.DataFrame:
-    # constants lists
-    data_list = defaultdict(list)
-    benchmarks = [0, 9.5, 19.5, 34.5, 44.5, 59.5, 69.5, 84.5, 94.5]
-    merge_prefixes = ["0 - 19.5m", "25 - 44.5m", "50 - 65.5m", "75 - 94.5m"]
-    final_labels = ["Distance", "Label", "Clear"]
-    segment_list = []
-    merge_list = []
-    segment_count = 0
-    segment_id = 1
-    merge_index = 0
+# substrate analysis
+def generate_keys(key_list, multiplier = 3):
+    new_list = []
 
-    for index in range(len(benchmarks)):
-        if index == (len(benchmarks) -1):
-            break
-        if segment_count == 2:
-            segment_count = 0
-            segment_id += 1
-        if index != 0 and index % 2 == 0:
-            merge_index +=1
-        for response_ in response.labels:
-            distance = float(response_.distance)
-            if index == 0 and distance >= benchmarks[index] and distance <= benchmarks[index + 1]:
-                data_list[f"distance ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(distance)
-                data_list[f"label ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(response_.label)
-                data_list[f"label_status ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(response_.label_status)
-            else:
-                if distance > benchmarks[index] and distance <= benchmarks[index + 1]:
-                    data_list[f"distance ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(distance)
-                    data_list[f"label ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(response_.label)
-                    data_list[f"label_status ({benchmarks[index]}-{benchmarks[index + 1]}m)"].append(response_.label_status)
+    for label in key_list:
+        new_list.extend([label]*multiplier)
 
-        # create segment list
-        segment_name = "Segment_{}".format(segment_id)
-        merge_name = merge_prefixes[merge_index]
-        segment_list.extend([segment_name]*3)
-        merge_list.extend([merge_name]*3)
-        #segment_list.extend([(segment_name,f"{merge_prefixes[merge_index]}", f"{prefix} ({benchmarks[index]}-{benchmarks[index + 1]}m)") for prefix in labels_prefix])
-        segment_count += 1
+    return new_list
 
-    # create a dataframe
-    df = pd.DataFrame.from_dict(data_list)
-    df_columns = list(df.columns)
 
-    # columns
-    cols = []
-    for val_ in range(8):
-        cols.extend([f"distance_{val_}", f"label_{val_}", f"status_{val_}"])
+def create_substrate_dataframe(response_data: dict, csv_name: str) -> pd.DataFrame:
+    segment_distances = ["0 - 19.5m", "25 - 44.5m", "50 - 65.5m", "75 - 94.5m"]
+
+    # get unique keys
+    response_keys = list(response_data.keys())
+    # create dataframes
+    df = pd.concat([pd.DataFrame.from_dict(response_data[key]) for key in list(response_data.keys())], axis = 1)
+
+    # create unique column names
+    column_names = []
+    for num in range(len(list(response_data.keys()))):
+        column_names.extend([f"distance_{num}", f"label_{num}", f"clear_{num}"])
+    # set column names
+    df.columns = column_names
+
+    # generate multi-level index
+    segment_list = generate_keys(list(response_data.keys()))
+    merge_list = generate_keys(segment_distances)
 
     # create multi index
     arrays = [
         segment_list,
         merge_list,
-        cols
+        column_names
     ]
     columns = pd.MultiIndex.from_arrays(arrays)
     # create a dataframe
     df = pd.DataFrame(df.iloc[:,:].values, columns=columns)  
 
     # save the dataframe to a csv file
-    df.to_csv(csv_name, index=False)    
+    df.to_csv(csv_name, index=False)
 
     return df
 
 
-def convert_csv_to_excel(csv_path: str):
-    # Read the CSV file into a DataFrame
-    df = pd.read_csv(csv_path)
+def extract_details(info: dict) -> list:
 
-    # Write the DataFrame to a BytesIO stream as an Excel file
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Sheet1')
-        output.seek(0)
+    return [info["distance"], info["label"], info["label_status"]]
 
-    return output.getvalue()
+
+def extract_single_attributes(selected_set: list, index_val: int) -> list:
+    sub_segments = []
+    # first segment
+    first_set = selected_set[index_val]
+    second_set = selected_set[index_val + 20]
+    sub_segments.extend(extract_details(first_set))
+    sub_segments.extend(extract_details(second_set))
+
+    return sub_segments
+
+
+def substrate_excel_creation(response_data: dict, excel_name: str):
+    selected_set_one = response_data["segment_one"]
+    selected_set_two = response_data["segment_two"]
+    selected_set_three = response_data["segment_three"]
+    selected_set_four = response_data["segment_four"]
+
+
+    final_segments = []
+    for index in range(20):
+        sub_set_segments = []
+        # first segment
+        sub_set_segments.extend(extract_single_attributes(selected_set_one, index))
+        # seconds segment
+        sub_set_segments.extend(extract_single_attributes(selected_set_two, index))
+        # seconds segment
+        sub_set_segments.extend(extract_single_attributes(selected_set_three, index))
+        # seconds segment
+        sub_set_segments.extend(extract_single_attributes(selected_set_four, index))
+        # append the segment
+        final_segments.append(sub_set_segments)
+
+    # Create a workbook and add a worksheet.
+    workbook = xlsxwriter.Workbook(excel_name)
+    worksheet = workbook.add_worksheet()
+
+    # Add a bold format to use to highlight cells.
+    bold = workbook.add_format({'bold': True, 'center_across': True, 'border': True})
+
+    # Add a border
+    border = workbook.add_format({'border': True})
+
+    # Add a number format for cells with money.
+    not_clear = workbook.add_format({'bold': True, 'bg_color': 'red', 'border': True})
+
+    # Write some data headers.
+    worksheet.merge_range("A1:P1", "Substrate Analysis", bold)
+    worksheet.merge_range("A2:D2", "Segment One", bold)
+    worksheet.merge_range("E2:H2", "Segment Two", bold)
+    worksheet.merge_range("I2:L2", "Segment Three", bold)
+    worksheet.merge_range("M2:P2", "Segment Four", bold)
+
+    # distances
+    worksheet.merge_range("A3:D3", "0 - 19.5m", bold)
+    worksheet.merge_range("E3:H3", "25 - 44.5m", bold)
+    worksheet.merge_range("I3:L3", "50 - 69.5m", bold)
+    worksheet.merge_range("M3:P3", "75 - 94.5", bold)
+
+
+    row = 3
+    # adding records
+    for diff_segments in final_segments:
+        col = 0
+        for range_index in range(0, 24, 3):
+            worksheet.write(row, col, diff_segments[range_index], border)
+            col += 1
+            worksheet.write(row, col, diff_segments[range_index +1], not_clear if not diff_segments[range_index +2] else border)
+            col += 1
+        row += 1
+
+
+    workbook.close()
+
+
+def load_and_prepare_excel_for_substrate(response_data: dict, excel_name: str):
+    substrate_excel_creation(response_data, excel_name)
+    # Load the workbook and select the active sheet
+    workbook = load_workbook(excel_name)
+    with BytesIO() as buffer:
+        workbook.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
 
 
 def fish_and_invert_dataframe_creator(response: dict, csv_name: str) -> pd.DataFrame:
@@ -91,5 +149,5 @@ def fish_and_invert_dataframe_creator(response: dict, csv_name: str) -> pd.DataF
     info_df = pd.concat([pd.DataFrame.from_dict(response_dict[key_]) for key_ in main_keys])
     # save the dataframe
     info_df.to_csv(csv_name, index=False)
-    
+
     return info_df

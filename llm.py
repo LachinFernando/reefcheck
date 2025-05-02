@@ -33,7 +33,10 @@ class LabelRecordings(BaseModel):
 
 
 class SegmentationLabels(BaseModel):
-    labels: List[LabelRecordings]
+    segment_one: List[LabelRecordings]
+    segment_two: List[LabelRecordings]
+    segment_three: List[LabelRecordings]
+    segment_four: List[LabelRecordings]
 
 
 class LabelRecordingsFishInvert(BaseModel):
@@ -64,7 +67,7 @@ def image_label_generator(image_local_path: str, prompt: str = SLATE_IMAGE_INSTR
             {"type": "text", "text": prompt},
             {
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
+                "image_url": {"url": f"data:image/png;base64,{image_data}"},
             },
         ],
     )

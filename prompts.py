@@ -21,6 +21,12 @@ Key rule for “no_label”:
 
 5. is completely blank
 
+segment details:
+segment one - 0 - 19.5m
+segment two - 25 - 44.5m
+segment three - 50 - 69.5m
+segment four - 75 - 94.5m
+
 Never invent a label for these cells.
 
 Guessing rule:

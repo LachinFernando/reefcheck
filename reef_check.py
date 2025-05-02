@@ -3,7 +3,7 @@ import os
 import uuid
 
 from llm import image_label_generator, image_label_generator_fish_invert
-from utils import dataframe_creator, convert_csv_to_excel, fish_and_invert_dataframe_creator
+from utils import create_substrate_dataframe, substrate_excel_creation, load_and_prepare_excel_for_substrate, fish_and_invert_dataframe_creator
 from firebase import upload_file
 
 
@@ -11,6 +11,7 @@ from firebase import upload_file
 SUBSTRATE_IMAGE = "substrate.png"
 FISH_INVERT_IMAGE = "fish_and_invert.png"
 SUBSTRATE_CSV = "substrate.csv"
+SUBSTRATE_EXCEL = "substrate.xlsx"
 FISH_INVERT_CSV = "fish_and_invert.csv"
 
 
@@ -57,7 +58,7 @@ def reef_analyser():
                 substrate_labels = image_label_generator(SUBSTRATE_IMAGE)
                 st.toast("Substrate Labels Generated")
                 # dataframe generation
-                substrate_df = dataframe_creator(substrate_labels, SUBSTRATE_CSV)
+                substrate_df = create_substrate_dataframe(substrate_labels.model_dump(), SUBSTRATE_CSV)
                 # upload the file
                 data_id = str(uuid.uuid4())
                 upload_file(SUBSTRATE_CSV, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'csv', 'substrate', data_id))
@@ -66,7 +67,7 @@ def reef_analyser():
                 # download button
                 st.download_button(
                     label="Download as Excel",
-                    data=convert_csv_to_excel(SUBSTRATE_CSV),
+                    data=load_and_prepare_excel_for_substrate(substrate_labels.model_dump(), SUBSTRATE_EXCEL),
                     file_name='substrate_data.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     on_click='ignore'
