@@ -40,10 +40,15 @@ class SegmentationLabels(BaseModel):
 
 
 class LabelRecordingsFishInvert(BaseModel):
-    name: str
-    distance: str
-    count: str
-    clear: str
+    name: str = Field(None, description = "Species Name")
+    distance_one: int
+    distance_one_clear: bool 
+    distance_two: int 
+    distance_two_clear: bool 
+    distance_three: int 
+    distance_three_clear: bool 
+    distance_four: int 
+    distance_four_clear: bool
 
 
 class SegmentationLabelsFishInvert(BaseModel):

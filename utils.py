@@ -129,8 +129,7 @@ def substrate_excel_creation(response_data: dict, excel_name: str):
     workbook.close()
 
 
-def load_and_prepare_excel_for_substrate(response_data: dict, excel_name: str):
-    substrate_excel_creation(response_data, excel_name)
+def load_and_prepare_excel_for_substrate(excel_name: str):
     # Load the workbook and select the active sheet
     workbook = load_workbook(excel_name)
     with BytesIO() as buffer:
@@ -139,15 +138,80 @@ def load_and_prepare_excel_for_substrate(response_data: dict, excel_name: str):
         return buffer.getvalue()
 
 
-def fish_and_invert_dataframe_creator(response: dict, csv_name: str) -> pd.DataFrame:
-    main_keys = ["fish", "invertebrates", "impacts", "coral_disease", "rare_animals"]
+def create_fish_slate_dataframe(response_data: dict, csv_name: str) -> pd.DataFrame:
+    # distances are constants
+    distances = ["0 - 20m", "25 - 45m", "50 - 75m", "75 - 95m"]
 
-    # list of dicts
-    dict_list = []
-    response_dict = response.model_dump()
+    main_keys = list(response_data.keys())
 
-    info_df = pd.concat([pd.DataFrame.from_dict(response_dict[key_]) for key_ in main_keys])
-    # save the dataframe
+    info_df = pd.concat([pd.DataFrame.from_dict(response_data[key_]) for key_ in main_keys])
+    
+    new_columns = []
+    new_columns.append("name")
+    for distance_index in range(len(distances)):
+        new_columns.extend([distances[distance_index], "set_{}_clear".format(distance_index)])
+
+    info_df.columns = new_columns
+
+    # save the dataframe to a csv file
     info_df.to_csv(csv_name, index=False)
 
     return info_df
+
+
+def fish_slate_excel_creation(response_data: dict, excel_name: str):
+
+    data_list = []
+
+    for key_ in list(response_data.keys()):
+        data_list.extend(response_data[key_])
+
+
+    distances = ["0 - 20m", "25 - 45m", "50 - 75m", "75 - 95m"]
+    # Create a workbook and add a worksheet.
+    workbook = xlsxwriter.Workbook(excel_name)
+    worksheet = workbook.add_worksheet()
+
+    # Add a bold format to use to highlight cells.
+    bold = workbook.add_format({'bold': True, 'center_across': True, 'border': True})
+
+    # sub category
+    sub_format = workbook.add_format({'bold': True, 'center_across': True, 'border': True, 'bg_color': 'green'})
+
+    # Add a border
+    border = workbook.add_format({'border': True})
+
+    # Add a number format for cells with money.
+    not_clear = workbook.add_format({'bold': True, 'bg_color': 'red', 'border': True})
+
+    worksheet.merge_range("A1:E1", "Fish Slate Analysis", bold)
+    worksheet.write(1, 0, "Type", bold)
+    worksheet.set_column('A:A', 30)
+    # distances
+    for index in range(len(distances)):
+        worksheet.write(1, index + 1, distances[index] , bold)
+
+    row = 2
+    col = 0
+    for key_ in list(response_data.keys()):
+        worksheet.write(row, col, key_, sub_format)
+        row +=1 
+        for data_dict in response_data[key_]:
+            worksheet.write(row, col, data_dict["name"], border)
+            worksheet.write(row, col+1, data_dict["distance_one"], not_clear if not data_dict["distance_one_clear"] else border)
+            worksheet.write(row, col+2, data_dict["distance_two"], not_clear if not data_dict["distance_two_clear"] else border)
+            worksheet.write(row, col+3, data_dict["distance_three"], not_clear if not data_dict["distance_three_clear"] else border)
+            worksheet.write(row, col+4, data_dict["distance_four"], not_clear if not data_dict["distance_four_clear"] else border)
+            row += 1
+
+
+    workbook.close()
+
+
+def load_and_prepare_excel_for_fish_slate(excel_name: str):
+    # Load the workbook and select the active sheet
+    workbook = load_workbook(excel_name)
+    with BytesIO() as buffer:
+        workbook.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
