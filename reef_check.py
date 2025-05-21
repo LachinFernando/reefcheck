@@ -1,7 +1,10 @@
 import streamlit as st
 import os
 import uuid
+from PIL import Image
+import io
 
+from utils import handle_image_orientation
 from llm import image_label_generator, image_label_generator_fish_invert
 from utils import create_substrate_dataframe, substrate_excel_creation, load_and_prepare_excel_for_substrate, create_fish_slate_dataframe, fish_slate_excel_creation, load_and_prepare_excel_for_fish_slate
 from firebase import upload_file
@@ -44,12 +47,14 @@ def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str,
 
 
 
-def save_uploaded_image(uploaded_file, target_name):
-    if uploaded_file is not None:
-        # Save the uploaded file to the workspace
-        with open(target_name, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        st.toast(f"File saved as {target_name}")
+def save_uploaded_image(image, target_name):
+    # Save the image in memory using BytesIO
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')  # Specify the format you'd like
+    img_byte_arr = img_byte_arr.getvalue()
+
+    # save the corrected image to disk
+    image.save(target_name)
 
 
 def reef_analyser():
@@ -66,9 +71,10 @@ def reef_analyser():
             on_change=on_file_one_uploaded
         )
         if uploaded_substrate is not None and not st.session_state['file_uploader_one']:
-            st.sidebar.image(uploaded_substrate, caption="Uploaded Substrate Image")
+            image = handle_image_orientation(Image.open(uploaded_substrate))
+            st.sidebar.image(image, caption="Uploaded Substrate Image")
             # save the uploaded image
-            save_uploaded_image(uploaded_substrate, SUBSTRATE_IMAGE)
+            save_uploaded_image(image, SUBSTRATE_IMAGE)
             # label generating
             with st.spinner("Generating Substrate Labels", show_time = True):
                 substrate_labels = image_label_generator(SUBSTRATE_IMAGE)
@@ -101,9 +107,10 @@ def reef_analyser():
             on_change=on_file_two_uploaded
         )
         if uploaded_fish_invert is not None and not st.session_state['file_uploader_two']:
-            st.sidebar.image(uploaded_fish_invert, caption="Uploaded Fish and Invert Image")
+            image = handle_image_orientation(Image.open(uploaded_fish_invert))
+            st.sidebar.image(image, caption="Uploaded Fish and Invert Image")
             # save the uploaded image
-            save_uploaded_image(uploaded_fish_invert, FISH_INVERT_IMAGE)
+            save_uploaded_image(image, FISH_INVERT_IMAGE)
             # label generating
             with st.spinner("Generating Fish and Invert Labels", show_time = True):
                 fish_and_invert_labels = image_label_generator_fish_invert(FISH_INVERT_IMAGE)
