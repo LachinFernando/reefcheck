@@ -22,10 +22,10 @@ Key rule for “no_label”:
 5. is completely blank
 
 segment details:
-segment one - 0 - 19.5m
-segment two - 25 - 44.5m
-segment three - 50 - 69.5m
-segment four - 75 - 94.5m
+segment one - has 40 number sets with values start from 0 and end from 19.5 incremented by 0.5. [0, 0.5, 1.0, ..., 18, 18.5, 19.0, 19.5]
+segment two - has 40 number sets with values start from 25 and end from 44.5 incremented by 0.5. [25, 25.5, 26.0, ..., 43, 43.5, 44.0, 44.5]
+segment three - has 40 number sets with values start from 50 and end from 69.5 incremented by 0.5. [50, 50.5, 51.0, ..., 68, 68.5, 69.0, 69.5]
+segment four - has 40 number sets with values start from 75 and end from 94.5 incremented by 0.5. [75, 75.5, 76.0, ..., 93, 93.5, 94.0, 94.5]
 
 Never invent a label for these cells.
 
