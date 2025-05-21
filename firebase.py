@@ -35,4 +35,3 @@ def upload_file(file_path, destination_blob_name):
 
     # Make the blob publicly viewable
     blob.make_public()
-    print(f"File uploaded to {blob.public_url}")
