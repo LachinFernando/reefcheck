@@ -7,6 +7,7 @@ import io
 from utils import handle_image_orientation
 from llm import image_label_generator_fish_invert
 from utils import create_fish_slate_dataframe, fish_slate_excel_creation, load_and_prepare_excel_for_fish_slate
+from utils import upload_bucket_path, fish_excel_data_extractor
 from s3_utils import upload_to_s3
 
 # constants
@@ -23,6 +24,10 @@ if "substrate_df" not in st.session_state:
 if "image" not in st.session_state:
     st.session_state.image = None
 
+if "button" not in st.session_state:
+    st.session_state.button = False
+
+
 def interacting_editable_df():
     st.session_state.dataframe = True
 
@@ -30,17 +35,8 @@ def off_interacting_editable_df():
     st.session_state.dataframe = False
     st.session_state.image = None
 
-
-def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str, data_id: str) -> str:
-    user_names = user_name.split(" ")
-    user_name_ = "_".join(user_names)
-
-    if type_ == 'image':
-        st.toast(f"Image Uploaded")
-        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
-    elif type_ == 'excel':
-        st.toast(f"Excel Uploaded")
-        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
+def save_button():
+    st.session_state.button = True
 
 def save_uploaded_image(image, target_name):
     img_byte_arr = io.BytesIO()
@@ -63,7 +59,7 @@ def fish_invert_slate():
     )
     
     if uploaded_fish_invert is not None:
-        if not st.session_state.dataframe:
+        if not st.session_state.dataframe and not st.session_state.button:
             image = handle_image_orientation(Image.open(uploaded_fish_invert))
             st.session_state.image = image
             save_uploaded_image(image, FISH_INVERT_IMAGE)
@@ -73,22 +69,32 @@ def fish_invert_slate():
                 st.toast("Fish and Invert Labels Generated")
                 fish_and_invert_df = create_fish_slate_dataframe(fish_and_invert_labels.model_dump(), FISH_INVERT_CSV)
                 st.session_state.fish_invert_df = fish_and_invert_df
-                fish_slate_excel_creation(fish_and_invert_labels.model_dump(), FISH_INVERT_EXCEL)
-                data_id = str(uuid.uuid4())
-                upload_to_s3(FISH_INVERT_EXCEL, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', data_id))
-                upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', data_id))
-
+        # add the image to the sidebar
         st.sidebar.image(st.session_state.image, caption="Uploaded Fish and Invert Image")
         # editable df 
         edited_df = st.data_editor(st.session_state.fish_invert_df, on_change=interacting_editable_df)
-            
-        # st.download_button(
-        #     label="Download as Excel",
-        #     data=load_and_prepare_excel_for_fish_slate(FISH_INVERT_EXCEL),
-        #     file_name='fish_and_invert_data.xlsx',
-        #     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        #     on_click='ignore'
-        # )
+        if st.button("Save Files", on_click=save_button):
+            with st.spinner("Saving Files", show_time=True):
+                # initiate excel creation and file saving
+                fish_response = fish_excel_data_extractor(edited_df)
+                fish_slate_excel_creation(fish_response, FISH_INVERT_EXCEL)
+                # create the data id
+                data_id = str(uuid.uuid4())
+                # save files
+                # save the excel
+                upload_to_s3(FISH_INVERT_EXCEL, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', data_id))
+                st.toast(f"Excel Uploaded")
+                # save the image
+                upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', data_id))
+                st.toast(f"Image Uploaded")
+                # download the excel file
+            st.download_button(
+                label="Download as Excel",
+                data=load_and_prepare_excel_for_fish_slate(FISH_INVERT_EXCEL),
+                file_name='fish_and_invert_data.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                on_click='ignore'
+            )
 
 if __name__ == "__main__":
     fish_invert_slate()
