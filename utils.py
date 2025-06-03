@@ -245,3 +245,84 @@ def load_and_prepare_excel_for_fish_slate(excel_name: str):
         workbook.save(buffer)
         buffer.seek(0)
         return buffer.getvalue()
+
+
+def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str, data_id: str) -> str:
+    user_names = user_name.split(" ")
+    user_name_ = "_".join(user_names)
+
+    if type_ == 'image':
+        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
+    elif type_ == 'excel':
+        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
+
+
+def substrate_excel_data_extractor(data: pd.DataFrame) -> dict:
+    suffixes = ["one", "two", "three", "four"]
+    annots = defaultdict(list)
+    column_list = list(data.columns)
+    count = 0
+
+    for index in range(0, 12, 3):
+        distance = data[column_list[index]].to_list()
+        label = data[column_list[index + 1]].to_list()
+        status = data[column_list[index + 2]].to_list()
+
+        for distance_, label_, status_ in zip(distance, label, status):
+            annots["segment_{}".format(suffixes[count])].append({
+                "distance": distance_,
+                "label": label_,
+                "label_status": status_
+            })
+
+        count +=1
+
+    return dict(annots)
+
+
+def extract_fish_details(fish_details: list) -> list:
+    total_records = []
+
+    for record_ in fish_details:
+        sample_dict = {}
+        sample_dict["name"] = record_["name"]
+        sample_dict["distance_one"] = record_["0 - 20m"]
+        sample_dict["distance_one_clear"] = record_["set_0_clear"]
+        sample_dict["distance_two"] = record_["25 - 45m"]
+        sample_dict["distance_two_clear"] = record_["set_1_clear"]
+        sample_dict["distance_three"] = record_["50 - 75m"]
+        sample_dict["distance_three_clear"] = record_["set_2_clear"]
+        sample_dict["distance_four"] = record_["75 - 95m"]
+        sample_dict["distance_four_clear"] = record_["set_3_clear"]
+        total_records.append(sample_dict)
+
+    return total_records
+
+
+def fish_excel_data_extractor(data: pd.DataFrame) -> dict:
+    # get data records
+    records = data.to_dict(orient='records')
+
+    annots = defaultdict(list)
+
+    # original records
+    fish_records = records[: 12]
+    invertebrates_records = records[12: 26]
+    impacts_records = records[26: 33]
+    coral_disease_records = records[33: 35]
+    rare_animals_records = records[35: 39]
+
+    # processed records
+    process_dict = {
+        "fish": fish_records,
+        "invertebrates": invertebrates_records,
+        "impacts": impacts_records,
+        "coral_disease": coral_disease_records,
+        "rare_animals": rare_animals_records
+
+    }
+
+    for key_ in process_dict.keys():
+        annots[key_].extend(extract_fish_details(process_dict[key_]))
+
+    return dict(annots)
