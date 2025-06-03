@@ -15,28 +15,28 @@ FISH_INVERT_IMAGE = "fish_and_invert.png"
 FISH_INVERT_CSV = "fish_and_invert.csv"
 FISH_INVERT_EXCEL = "fish_and_invert.xlsx"
 
-if "dataframe" not in st.session_state:
-    st.session_state.dataframe = False
+if "fish_dataframe" not in st.session_state:
+    st.session_state.fish_dataframe = False
 
-if "substrate_df" not in st.session_state:
-    st.session_state.substrate_df = None
+if "fish_invert_df" not in st.session_state:
+    st.session_state.fish_invert_df = None
 
-if "image" not in st.session_state:
-    st.session_state.image = None
+if "fish_invert_image" not in st.session_state:
+    st.session_state.fish_invert_image = None
 
-if "button" not in st.session_state:
-    st.session_state.button = False
+if "fish_invert_button" not in st.session_state:
+    st.session_state.fish_invert_button = False
 
 
 def interacting_editable_df():
-    st.session_state.dataframe = True
+    st.session_state.fish_dataframe = True
 
 def off_interacting_editable_df():
-    st.session_state.dataframe = False
-    st.session_state.image = None
+    st.session_state.fish_dataframe = False
+    st.session_state.fish_invert_image = None
 
 def save_button():
-    st.session_state.button = True
+    st.session_state.fish_invert_button = True
 
 def save_uploaded_image(image, target_name):
     img_byte_arr = io.BytesIO()
@@ -59,9 +59,9 @@ def fish_invert_slate():
     )
     
     if uploaded_fish_invert is not None:
-        if not st.session_state.dataframe and not st.session_state.button:
+        if not st.session_state.fish_dataframe and not st.session_state.fish_invert_button:
             image = handle_image_orientation(Image.open(uploaded_fish_invert))
-            st.session_state.image = image
+            st.session_state.fish_invert_image = image
             save_uploaded_image(image, FISH_INVERT_IMAGE)
             
             with st.spinner("Generating Fish and Invert Labels", show_time=True):
@@ -70,7 +70,7 @@ def fish_invert_slate():
                 fish_and_invert_df = create_fish_slate_dataframe(fish_and_invert_labels.model_dump(), FISH_INVERT_CSV)
                 st.session_state.fish_invert_df = fish_and_invert_df
         # add the image to the sidebar
-        st.sidebar.image(st.session_state.image, caption="Uploaded Fish and Invert Image")
+        st.sidebar.image(st.session_state.fish_invert_image, caption="Uploaded Fish and Invert Image")
         # editable df 
         edited_df = st.data_editor(st.session_state.fish_invert_df, on_change=interacting_editable_df)
         if st.button("Save Files", on_click=save_button):
