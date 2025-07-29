@@ -34,7 +34,12 @@ def upload_to_s3(file_path: str, s3_key: str) -> bool:
         )
         
         # Upload the file
-        s3.upload_file(file_path, os.environ["AWS_BUCKET_NAME"], s3_key)
+        s3.upload_file(
+            file_path, 
+            os.environ["AWS_BUCKET_NAME"], 
+            s3_key,
+            ExtraArgs={'ACL': 'public-read'}
+        )
         print(f"File {file_path} uploaded to s3://{os.environ['AWS_BUCKET_NAME']}/{s3_key}")
         return True
         

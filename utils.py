@@ -4,6 +4,12 @@ from io import BytesIO
 import xlsxwriter
 from openpyxl import load_workbook
 from PIL import Image, ExifTags
+import streamlit as st
+import os
+
+
+# environment variables
+os.environ["ENV"] = st.secrets["aws"]["ENV"]
 
 
 # Image utilities
@@ -30,6 +36,7 @@ def handle_image_orientation(image: Image.Image) -> Image.Image:
         elif exif[orientation] == 8:
             image = image.rotate(90, expand=True)
     except (AttributeError, KeyError, IndexError):
+        print("Image does not have exif data")
         # cases: image don't have exif data
         pass
     
@@ -252,9 +259,9 @@ def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str,
     user_name_ = "_".join(user_names)
 
     if type_ == 'image':
-        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
+        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
     elif type_ == 'excel':
-        return f"reefcheck/data/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
+        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
 
 
 def substrate_excel_data_extractor(data: pd.DataFrame) -> dict:
