@@ -254,16 +254,6 @@ def load_and_prepare_excel_for_fish_slate(excel_name: str):
         return buffer.getvalue()
 
 
-def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str, data_id: str) -> str:
-    user_names = user_name.split(" ")
-    user_name_ = "_".join(user_names)
-
-    if type_ == 'image':
-        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
-    elif type_ == 'excel':
-        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"
-
-
 def substrate_excel_data_extractor(data: pd.DataFrame) -> dict:
     suffixes = ["one", "two", "three", "four"]
     annots = defaultdict(list)

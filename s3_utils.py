@@ -95,3 +95,13 @@ def download_from_s3(s3_key: str, local_path: str) -> bool:
     except Exception as e:
         print(f"Error downloading file from S3: {str(e)}")
         return False
+
+
+def upload_bucket_path(user_name: str, user_id:str, type_: str, slate_type: str, data_id: str) -> str:
+    user_names = user_name.split(" ")
+    user_name_ = "_".join(user_names)
+
+    if type_ == 'image':
+        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/images/{data_id}.png"
+    elif type_ == 'excel':
+        return f"{os.environ["ENV"]}/{slate_type}/{user_name_}_{user_id}/excel/{data_id}.xlsx"

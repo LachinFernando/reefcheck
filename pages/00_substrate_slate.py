@@ -9,9 +9,9 @@ import pandas as pd
 
 from utils import handle_image_orientation
 from llm import image_label_generator
-from utils import create_substrate_dataframe, substrate_excel_creation, upload_bucket_path
+from utils import create_substrate_dataframe, substrate_excel_creation
 from utils import substrate_excel_data_extractor, load_and_prepare_excel_for_substrate
-from s3_utils import upload_to_s3
+from s3_utils import upload_to_s3, upload_bucket_path
 
 
 # constants
@@ -87,7 +87,8 @@ def substrate_slate():
         # add the image to the sidebar
         try:
             st.sidebar.image(st.session_state.image, caption="Uploaded Substrate Image")
-        except Exception as e:
+        except Exception as error:
+            print(str(error))
             st.error(f"Upload got corrupted! Please refresh the page and try again!")
             st.stop()
         # editable df 
@@ -96,7 +97,6 @@ def substrate_slate():
         file_name = st.text_input("File Name to be Saved", value=None, on_change = file_name_input)
         if not file_name:
             st.error("Please enter a file name to save the files.")
-            print(str(error))
             st.stop()
         # set the image extension
         save_image_name = file_name + ".png"
@@ -110,10 +110,10 @@ def substrate_slate():
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
-                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'substrate', file_name))
+                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'substrate', f"{data_id}_{file_name}"))
                 st.toast(f"Excel Uploaded")
                 # save the image
-                upload_to_s3(SUBSTRATE_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'substrate', file_name))
+                upload_to_s3(SUBSTRATE_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'substrate', f"{data_id}_{file_name}"))
                 st.toast(f"Image Uploaded")
                 # download the excel file
             st.download_button(

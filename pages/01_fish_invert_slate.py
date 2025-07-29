@@ -7,8 +7,8 @@ import io
 from utils import handle_image_orientation
 from llm import image_label_generator_fish_invert
 from utils import create_fish_slate_dataframe, fish_slate_excel_creation, load_and_prepare_excel_for_fish_slate
-from utils import upload_bucket_path, fish_excel_data_extractor
-from s3_utils import upload_to_s3
+from utils import fish_excel_data_extractor
+from s3_utils import upload_to_s3, upload_bucket_path
 
 # constants
 FISH_INVERT_IMAGE = "fish_and_invert.png"
@@ -102,10 +102,10 @@ def fish_invert_slate():
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
-                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', file_name))
+                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
                 st.toast(f"Excel Uploaded")
                 # save the image
-                upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', file_name))
+                upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
                 st.toast(f"Image Uploaded")
                 # download the excel file
             st.download_button(
