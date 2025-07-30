@@ -9,6 +9,14 @@ from llm import image_label_generator_fish_invert
 from utils import create_fish_slate_dataframe, fish_slate_excel_creation, load_and_prepare_excel_for_fish_slate
 from utils import fish_excel_data_extractor
 from s3_utils import upload_to_s3, upload_bucket_path
+from db_utils import add_record
+
+
+# enivironment variables
+os.environ["ENV"] = st.secrets["aws"]["ENV"]
+
+# db table name
+DB_TABLE_NAME = f"{os.environ['ENV']}-reefcheck"
 
 # constants
 FISH_INVERT_IMAGE = "fish_and_invert.png"
@@ -94,6 +102,7 @@ def fish_invert_slate():
         save_image_name = file_name + ".png"
         save_excel_name = file_name + ".xlsx"
         if st.button("Save Files", on_click=save_button):
+            download_capability = True
             with st.spinner("Saving Files", show_time=True):
                 # initiate excel creation and file saving
                 fish_response = fish_excel_data_extractor(edited_df)
@@ -102,12 +111,29 @@ def fish_invert_slate():
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
-                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
-                st.toast(f"Excel Uploaded")
-                # save the image
-                upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
-                st.toast(f"Image Uploaded")
-                # download the excel file
+                excel_url = upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
+                if excel_url:
+                    st.toast(f"Excel Uploaded")
+                else:
+                    download_capability = False
+                    # save the image
+                image_url = upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
+                if image_url:
+                    st.toast(f"Image Uploaded")
+                else:
+                    download_capability = False
+                # add a record to the database
+                if download_capability:
+                    db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
+                    print(db_response)
+                    if db_response['success']:
+                        st.toast(f"Record Saved")
+                    else:
+                        download_capability = False
+            # download the excel file
+            if not download_capability:
+                st.error(f"Error saving files. Please contact support for assistance.")
+                st.stop()
             st.download_button(
                 label="Download as Excel",
                 data=load_and_prepare_excel_for_fish_slate(save_excel_name),

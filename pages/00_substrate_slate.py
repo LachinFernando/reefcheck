@@ -12,6 +12,14 @@ from llm import image_label_generator
 from utils import create_substrate_dataframe, substrate_excel_creation
 from utils import substrate_excel_data_extractor, load_and_prepare_excel_for_substrate
 from s3_utils import upload_to_s3, upload_bucket_path
+from db_utils import add_record
+
+
+# enivironment variables
+os.environ["ENV"] = st.secrets["aws"]["ENV"]
+
+# db table name
+DB_TABLE_NAME = f"{os.environ['ENV']}-reefcheck"
 
 
 # constants
@@ -102,6 +110,7 @@ def substrate_slate():
         save_image_name = file_name + ".png"
         save_excel_name = file_name + ".xlsx"
         if st.button("Save Files", on_click=save_button):
+            download_capability = True
             with st.spinner("Saving Files", show_time=True):
                 # initiate excel creation and file saving
                 substrate_response = substrate_excel_data_extractor(edited_df)
@@ -110,12 +119,29 @@ def substrate_slate():
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
-                upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'substrate', f"{data_id}_{file_name}"))
-                st.toast(f"Excel Uploaded")
+                excel_url = upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'substrate', f"{data_id}_{file_name}"))
+                if excel_url:
+                    st.toast(f"Excel Uploaded")
+                else:
+                    download_capability = False
                 # save the image
-                upload_to_s3(SUBSTRATE_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'substrate', f"{data_id}_{file_name}"))
-                st.toast(f"Image Uploaded")
-                # download the excel file
+                image_url = upload_to_s3(SUBSTRATE_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'substrate', f"{data_id}_{file_name}"))
+                if image_url:
+                    st.toast(f"Image Uploaded")
+                else:
+                    download_capability = False
+                # add a record to the database
+                if download_capability:
+                    db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
+                    print(db_response)
+                    if db_response['success']:
+                        st.toast(f"Record Saved")
+                    else:
+                        download_capability = False
+            if not download_capability:
+                st.error(f"Error saving files. Please contact support for assistance.")
+                st.stop()
+            # download the excel file
             st.download_button(
                 label="Download as Excel",
                 data=load_and_prepare_excel_for_substrate(save_excel_name),

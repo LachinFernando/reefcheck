@@ -9,7 +9,7 @@ os.environ["AWS_REGION"] = st.secrets["aws"]["REGION_NAME"]
 os.environ["AWS_BUCKET_NAME"] = st.secrets["aws"]["AWS_BUCKET_NAME"]
 
 # AWS S3 utilities
-def upload_to_s3(file_path: str, s3_key: str) -> bool:
+def upload_to_s3(file_path: str, s3_key: str) -> str:
     """
     Uploads a file to AWS S3 bucket.
     
@@ -41,20 +41,22 @@ def upload_to_s3(file_path: str, s3_key: str) -> bool:
             ExtraArgs={'ACL': 'public-read'}
         )
         print(f"File {file_path} uploaded to s3://{os.environ['AWS_BUCKET_NAME']}/{s3_key}")
-        return True
+        # create the object url
+        object_url = f"https://{os.environ['AWS_BUCKET_NAME']}.s3.{os.environ['AWS_REGION']}.amazonaws.com/{s3_key}"
+        return object_url
         
     except FileNotFoundError:
         print(f"The file {file_path} was not found")
-        return False
+        return None
     except NoCredentialsError:
         print("AWS credentials not available")
-        return False
+        return None
     except PartialCredentialsError:
         print("Incomplete AWS credentials")
-        return False
+        return None
     except Exception as e:
         print(f"Error uploading file to S3: {str(e)}")
-        return False
+        return None
 
 
 def download_from_s3(s3_key: str, local_path: str) -> bool:
