@@ -1,9 +1,12 @@
 import boto3
 from datetime import datetime, timedelta
 import os
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 import pandas as pd
 import streamlit as st
+
+# Type alias for DynamoDB item
+dynamodb_item = Dict[str, Any]
 
 
 os.environ["AWS_ACCESS_KEY_ID"] = st.secrets["aws"]["AWS_ACCESS_KEY"]
@@ -19,6 +22,7 @@ def add_record(
     user_name: str,
     image_url: str,
     excel_url: str,
+    status: str,
     creation_date: Optional[str] = None,
     additional_attributes: Optional[Dict] = None
 ) -> Dict:
@@ -53,7 +57,8 @@ def add_record(
         'user_name': user_name,
         'creation_date': creation_date or datetime.utcnow().isoformat(),
         'image_url': image_url,
-        'excel_url': excel_url
+        'excel_url': excel_url,
+        'status': status
     }
     
     # Add any additional attributes if provided
@@ -113,11 +118,11 @@ def get_recent_records(table_name: str, days: int = 14, gsi_name: str = 'Creatio
             IndexName=gsi_name,
             KeyConditionExpression='#pk = :pk_value AND #cd BETWEEN :start_date AND :end_date',
             ExpressionAttributeNames={
-                '#pk': 'GSIPK',  # The partition key of the GSI
+                '#pk': 'status',  # The partition key of the GSI
                 '#cd': 'creation_date'  # The sort key of the GSI
             },
             ExpressionAttributeValues={
-                ':pk_value': 'RECORD',  # A constant value for all records
+                ':pk_value': 'success',
                 ':start_date': start_date.isoformat(),
                 ':end_date': end_date.isoformat()
             },
@@ -132,11 +137,11 @@ def get_recent_records(table_name: str, days: int = 14, gsi_name: str = 'Creatio
                 IndexName=gsi_name,
                 KeyConditionExpression='#pk = :pk_value AND #cd BETWEEN :start_date AND :end_date',
                 ExpressionAttributeNames={
-                    '#pk': 'GSIPK',
+                    '#pk': 'status',
                     '#cd': 'creation_date'
                 },
                 ExpressionAttributeValues={
-                    ':pk_value': 'RECORD',
+                    ':pk_value': 'success',
                     ':start_date': start_date.isoformat(),
                     ':end_date': end_date.isoformat()
                 },

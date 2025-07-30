@@ -132,7 +132,7 @@ def substrate_slate():
                     download_capability = False
                 # add a record to the database
                 if download_capability:
-                    db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url)
+                    db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
                     print(db_response)
                     if db_response['success']:
                         st.toast(f"Record Saved")
