@@ -91,7 +91,7 @@ def plot_uploads_per_day(records_df: pd.DataFrame, days: int = 30) -> None:
         with col2:
             st.metric("Average Daily Uploads", f"{daily_counts.mean():.1f}")
         with col3:
-            st.metric("Busiest Day", f"{daily_counts.idxmax().strftime('%b %d, %Y')} ({daily_counts.max()} uploads)")
+            st.metric("Busiest Day", f"{daily_counts.idxmax().strftime('%b %d, %Y')}")
     else:
         st.error("No 'creation_date' column found in the data.")
 
