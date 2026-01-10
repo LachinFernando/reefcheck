@@ -30,13 +30,23 @@ class LabelRecordings(BaseModel):
     distance: str
     label: str
     label_status: bool
-
+    
+class InfoRecordings(BaseModel):
+  site_name: str
+  country_island: str
+  team_leader: str
+  data_recorded_by: str
+  depth: str
+  date: str
+  time: str
+  
 
 class SegmentationLabels(BaseModel):
-    segment_one: List[LabelRecordings]
-    segment_two: List[LabelRecordings]
-    segment_three: List[LabelRecordings]
-    segment_four: List[LabelRecordings]
+  info_segment: List[InfoRecordings]
+  segment_one: List[LabelRecordings]
+  segment_two: List[LabelRecordings]
+  segment_three: List[LabelRecordings]
+  segment_four: List[LabelRecordings]
 
 
 class LabelRecordingsFishInvert(BaseModel):
