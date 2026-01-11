@@ -14,7 +14,7 @@ from utils import create_substrate_dataframe, substrate_excel_creation
 from utils import substrate_excel_data_extractor, load_and_prepare_excel_for_substrate
 from s3_utils import upload_to_s3, upload_bucket_path
 from db_utils import add_record
-
+from session_records import init_slate_information
 
 # enivironment variables
 os.environ["ENV"] = st.secrets["aws"]["ENV"]
@@ -34,9 +34,6 @@ if "dataframe" not in st.session_state:
 if "substrate_df" not in st.session_state:
     st.session_state.substrate_df = None
 
-if "slate_information" not in st.session_state:
-    st.session_state.slate_information = {}
-
 if "slate_form_done" not in st.session_state:
     st.session_state.slate_form_done  = False 
 
@@ -54,6 +51,8 @@ if "submit_all" not in st.session_state:
 
 if "info_submission" not in st.session_state:
     st.session_state.info_submission = False
+
+init_slate_information()
 
 def interacting_editable_df():
     st.session_state.dataframe = True
@@ -199,7 +198,7 @@ def substrate_slate():
                     db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
                     print(db_response)
                     if db_response['success']:
-                        st.toast(f"Record Saved")
+                        st.toast(f"Record Saved", icon='✅')
                     else:
                         download_capability = False
             if not download_capability:

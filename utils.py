@@ -235,7 +235,7 @@ def create_fish_slate_dataframe(response_data: dict, csv_name: str) -> pd.DataFr
     return info_df
 
 
-def fish_slate_excel_creation(response_data: dict, excel_name: str):
+def fish_slate_excel_creation(response_data: dict, info_data: dict, excel_name: str):
 
     data_list = []
 
@@ -260,14 +260,53 @@ def fish_slate_excel_creation(response_data: dict, excel_name: str):
     # Add a number format for cells with money.
     not_clear = workbook.add_format({'bold': True, 'bg_color': 'red', 'border': True})
 
-    worksheet.merge_range("A1:E1", "Fish Slate Analysis", bold)
-    worksheet.write(1, 0, "Type", bold)
+    #Write info headers.
+    worksheet.merge_range("A1:B1", "Site Name", bold)
+    worksheet.merge_range("C1:D1", "Country/ island", bold)
+    worksheet.merge_range("E1:F1", "Team Leader", bold)
+    worksheet.merge_range("G1:H1", "Data Recorded By", bold)
+    worksheet.merge_range("I1:J1", "Depth", bold)
+    worksheet.merge_range("K1:L1", "Date", bold)
+    worksheet.merge_range("M1:N1", "Time", bold)
+    
+    
+    
+    worksheet.merge_range("A4:E4", "Fish Slate Analysis", bold)
+    worksheet.write(4, 0, "Type", bold)
     worksheet.set_column('A:A', 30)
+    
+    # Write Fish Slate record data
+    info_col = 0
+    info_row = 2
+
+    info_fields = [
+        "site_name",
+        "country_island",
+        "team_leader",
+        "data_recorded_by",
+        "depth",
+        "date",
+        "time",
+    ]
+
+    for field in info_fields:
+        worksheet.merge_range(
+            info_row - 1,        # row index (0-based)
+            info_col,
+            info_row - 1,
+            info_col + 1,
+            info_data.get(field, ""),
+            border
+        )
+        info_col += 2
+    
+    
+    
     # distances
     for index in range(len(distances)):
-        worksheet.write(1, index + 1, distances[index] , bold)
+        worksheet.write(4, index + 1, distances[index] , bold)
 
-    row = 2
+    row = 5
     col = 0
     for key_ in list(response_data.keys()):
         worksheet.write(row, col, key_, sub_format)

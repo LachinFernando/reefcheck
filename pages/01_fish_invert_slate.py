@@ -10,7 +10,7 @@ from utils import create_fish_slate_dataframe, fish_slate_excel_creation, load_a
 from utils import fish_excel_data_extractor
 from s3_utils import upload_to_s3, upload_bucket_path
 from db_utils import add_record
-
+from session_records import init_slate_information
 
 # enivironment variables
 os.environ["ENV"] = st.secrets["aws"]["ENV"]
@@ -36,6 +36,8 @@ if "fish_invert_button" not in st.session_state:
 
 if "fish_invert_file_name" not in st.session_state:
     st.session_state.fish_invert_file_name = False
+
+init_slate_information()
 
 
 def interacting_editable_df():
@@ -81,7 +83,7 @@ def fish_invert_slate():
             
             with st.spinner("Generating Fish and Invert Labels", show_time=True):
                 fish_and_invert_labels = image_label_generator_fish_invert(FISH_INVERT_IMAGE)
-                st.toast("Fish and Invert Labels Generated")
+                st.toast("Fish and Invert Labels Generated", icon='✅')
                 fish_and_invert_df = create_fish_slate_dataframe(fish_and_invert_labels.model_dump(), FISH_INVERT_CSV)
                 st.session_state.fish_invert_df = fish_and_invert_df
         # add the image to the sidebar
@@ -106,20 +108,20 @@ def fish_invert_slate():
             with st.spinner("Saving Files", show_time=True):
                 # initiate excel creation and file saving
                 fish_response = fish_excel_data_extractor(edited_df)
-                fish_slate_excel_creation(fish_response, save_excel_name)
+                fish_slate_excel_creation(fish_response, st.session_state.slate_information,save_excel_name)
                 # create the data id
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
                 excel_url = upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
                 if excel_url:
-                    st.toast(f"Excel Uploaded")
+                    st.toast(f"Excel Uploaded", icon='✅')
                 else:
                     download_capability = False
                     # save the image
                 image_url = upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
                 if image_url:
-                    st.toast(f"Image Uploaded")
+                    st.toast(f"Image Uploaded", icon='✅')
                 else:
                     download_capability = False
                 # add a record to the database
@@ -127,7 +129,7 @@ def fish_invert_slate():
                     db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
                     print(db_response)
                     if db_response['success']:
-                        st.toast(f"Record Saved")
+                        st.toast(f"Record Saved", icon='✅')
                     else:
                         download_capability = False
             # download the excel file
