@@ -55,6 +55,8 @@ def generate_keys(key_list, multiplier = 3):
 def create_substrate_dataframe(response_data: dict, csv_name: str) -> pd.DataFrame:
     segment_distances = ["0 - 19.5m", "25 - 44.5m", "50 - 65.5m", "75 - 94.5m"]
 
+    # pop out the slate info 
+    info_segment = response_data.pop('info_segment', None)
     # get unique keys
     response_keys = list(response_data.keys())
     # create dataframes
@@ -84,7 +86,7 @@ def create_substrate_dataframe(response_data: dict, csv_name: str) -> pd.DataFra
     # save the dataframe to a csv file
     df.to_csv(csv_name, index=False)
 
-    return df
+    return df, info_segment
 
 
 def extract_details(info: dict) -> list:
@@ -103,7 +105,8 @@ def extract_single_attributes(selected_set: list, index_val: int) -> list:
     return sub_segments
 
 
-def substrate_excel_creation(response_data: dict, excel_name: str):
+def substrate_excel_creation(response_data: dict, info_data: dict, excel_name: str):
+    information_data = info_data
     selected_set_one = response_data["segment_one"]
     selected_set_two = response_data["segment_two"]
     selected_set_three = response_data["segment_three"]
@@ -137,21 +140,57 @@ def substrate_excel_creation(response_data: dict, excel_name: str):
     # Add a number format for cells with money.
     not_clear = workbook.add_format({'bold': True, 'bg_color': 'red', 'border': True})
 
+    #Write info headers.
+    worksheet.merge_range("A1:B1", "Site Name", bold)
+    worksheet.merge_range("C1:D1", "Country/ island", bold)
+    worksheet.merge_range("E1:F1", "Team Leader", bold)
+    worksheet.merge_range("G1:H1", "Data Recorded By", bold)
+    worksheet.merge_range("I1:J1", "Depth", bold)
+    worksheet.merge_range("K1:L1", "Date", bold)
+    worksheet.merge_range("M1:N1", "Time", bold)
+    
+    
     # Write some data headers.
-    worksheet.merge_range("A1:P1", "Substrate Analysis", bold)
-    worksheet.merge_range("A2:D2", "Segment One", bold)
-    worksheet.merge_range("E2:H2", "Segment Two", bold)
-    worksheet.merge_range("I2:L2", "Segment Three", bold)
-    worksheet.merge_range("M2:P2", "Segment Four", bold)
+    worksheet.merge_range("A5:P5", "Substrate Analysis", bold)
+    worksheet.merge_range("A6:D6", "Segment One", bold)
+    worksheet.merge_range("E6:H6", "Segment Two", bold)
+    worksheet.merge_range("I6:L6", "Segment Three", bold)
+    worksheet.merge_range("M6:P6", "Segment Four", bold)
+
 
     # distances
-    worksheet.merge_range("A3:D3", "0 - 19.5m", bold)
-    worksheet.merge_range("E3:H3", "25 - 44.5m", bold)
-    worksheet.merge_range("I3:L3", "50 - 69.5m", bold)
-    worksheet.merge_range("M3:P3", "75 - 94.5", bold)
+    worksheet.merge_range("A7:D7", "0 - 19.5m", bold)
+    worksheet.merge_range("E7:H7", "25 - 44.5m", bold)
+    worksheet.merge_range("I7:L7", "50 - 69.5m", bold)
+    worksheet.merge_range("M7:P7", "75 - 94.5", bold)
 
+    info_col = 0
+    info_row = 2
 
-    row = 3
+    info_fields = [
+        "site_name",
+        "country_island",
+        "team_leader",
+        "data_recorded_by",
+        "depth",
+        "date",
+        "time",
+    ]
+
+    for field in info_fields:
+        worksheet.merge_range(
+            info_row - 1,        # row index (0-based)
+            info_col,
+            info_row - 1,
+            info_col + 1,
+            info_data.get(field, ""),
+            border
+        )
+        info_col += 2
+            
+
+    
+    row = 8
     # adding records
     for diff_segments in final_segments:
         col = 0
@@ -196,7 +235,7 @@ def create_fish_slate_dataframe(response_data: dict, csv_name: str) -> pd.DataFr
     return info_df
 
 
-def fish_slate_excel_creation(response_data: dict, excel_name: str):
+def fish_slate_excel_creation(response_data: dict, info_data: dict, excel_name: str):
 
     data_list = []
 
@@ -221,14 +260,53 @@ def fish_slate_excel_creation(response_data: dict, excel_name: str):
     # Add a number format for cells with money.
     not_clear = workbook.add_format({'bold': True, 'bg_color': 'red', 'border': True})
 
-    worksheet.merge_range("A1:E1", "Fish Slate Analysis", bold)
-    worksheet.write(1, 0, "Type", bold)
+    #Write info headers.
+    worksheet.merge_range("A1:B1", "Site Name", bold)
+    worksheet.merge_range("C1:D1", "Country/ island", bold)
+    worksheet.merge_range("E1:F1", "Team Leader", bold)
+    worksheet.merge_range("G1:H1", "Data Recorded By", bold)
+    worksheet.merge_range("I1:J1", "Depth", bold)
+    worksheet.merge_range("K1:L1", "Date", bold)
+    worksheet.merge_range("M1:N1", "Time", bold)
+    
+    
+    
+    worksheet.merge_range("A4:E4", "Fish Slate Analysis", bold)
+    worksheet.write(4, 0, "Type", bold)
     worksheet.set_column('A:A', 30)
+    
+    # Write Fish Slate record data
+    info_col = 0
+    info_row = 2
+
+    info_fields = [
+        "site_name",
+        "country_island",
+        "team_leader",
+        "data_recorded_by",
+        "depth",
+        "date",
+        "time",
+    ]
+
+    for field in info_fields:
+        worksheet.merge_range(
+            info_row - 1,        # row index (0-based)
+            info_col,
+            info_row - 1,
+            info_col + 1,
+            info_data.get(field, ""),
+            border
+        )
+        info_col += 2
+    
+    
+    
     # distances
     for index in range(len(distances)):
-        worksheet.write(1, index + 1, distances[index] , bold)
+        worksheet.write(4, index + 1, distances[index] , bold)
 
-    row = 2
+    row = 5
     col = 0
     for key_ in list(response_data.keys()):
         worksheet.write(row, col, key_, sub_format)
@@ -318,7 +396,7 @@ def fish_excel_data_extractor(data: pd.DataFrame) -> dict:
         "rare_animals": rare_animals_records
 
     }
-
+    
     for key_ in process_dict.keys():
         annots[key_].extend(extract_fish_details(process_dict[key_]))
 
