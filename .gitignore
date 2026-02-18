@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+ocr_outputs/
 
 # Virtual Environment
 venv/
@@ -62,4 +63,5 @@ serviceAccount.json
 
 # toml files
 *.toml
-
+*.yaml
+response.json
