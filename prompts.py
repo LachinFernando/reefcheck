@@ -1,6 +1,8 @@
 SLATE_IMAGE_INSTRUCTIONS = """
 You will see a photo of a Reef-Check slate that lists substrate observations by distance (rows) and segment (columns). 
 
+{box_coordinates_section}
+
 For every distance value that appears in the left-most column of each segment extract:
 
 1. distance the numeric value (e.g., 0.5, 17.5).
@@ -34,10 +36,9 @@ Guessing rule:
 Guess only if you see shapes that resemble letters/numbers of a substrate code but they are smudged or incomplete; then set label_status=false
 
 Example:
-{"distance": 0.0,  "label": "HC",       "label_status": true}
-{"distance": 0.5,  "label": "no_label", "label_status": true}
-{"distance": 1.0,  "label": "RB",       "label_status": false}
-
+{{"distance": 0.0,  "label": "HC",       "label_status": true}}
+{{"distance": 0.5,  "label": "no_label", "label_status": true}}
+{{"distance": 1.0,  "label": "RB",       "label_status": false}}
 """
 
 FISH_INVERT_INSTRUCTIONS =IMAGE_INSTRUCTIONS = """
