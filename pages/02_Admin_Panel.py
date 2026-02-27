@@ -20,18 +20,18 @@ admin_users = st.secrets["admin"]["ADMIN_USERS"]
 DB_TABLE_NAME = f"{os.environ['ENV']}-reefcheck"
 
 # Authentication
-if not st.experimental_user.is_logged_in:
+if not st.user.is_logged_in:
     st.error("🔒 Please log in to access this page.")
     st.stop()
 
-if st.experimental_user['email'] not in admin_users:
+if st.user['email'] not in admin_users:
     st.error("⛔ You are not authorized to access this page.")
     st.stop()
 
 # Sidebar with filters
 with st.sidebar:
     st.title("Admin Controls")
-    st.write(f"Welcome, {st.experimental_user['name']} 👋")
+    st.write(f"Welcome, {st.user['name']} 👋")
     days_to_show = st.slider(
         "Show data for last (days):",
         min_value=7,
@@ -40,7 +40,7 @@ with st.sidebar:
         step=7
     )
     st.markdown("---")
-    st.caption(f"Logged in as: {st.experimental_user['email']}")
+    st.caption(f"Logged in as: {st.user['email']}")
 
 # Main content
 st.title("ReefCheck Admin Dashboard")
@@ -57,27 +57,3 @@ if recent_records['success']:
         st.info("ℹ️ No recent uploads found in the selected date range.")
 else:
     st.error(f"❌ Failed to load data: {recent_records['message']}")
-
-# Add some custom CSS for better appearance
-st.markdown("""
-<style>
-    .stApp {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #f0f2f6;
-        border-radius: 4px 4px 0 0;
-        gap: 1rem;
-        padding: 0.5rem 1rem;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #e6f0ff;
-    }
-</style>
-""", unsafe_allow_html=True)

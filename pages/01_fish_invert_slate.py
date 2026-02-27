@@ -62,7 +62,7 @@ def save_uploaded_image(image, target_name):
     image.save(target_name)
 
 def fish_invert_slate():
-    if not st.experimental_user.is_logged_in:
+    if not st.user.is_logged_in:
         st.error("Please log in to access this page.")
         return
     
@@ -113,20 +113,20 @@ def fish_invert_slate():
                 data_id = str(uuid.uuid4())
                 # save files
                 # save the excel
-                excel_url = upload_to_s3(save_excel_name, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
+                excel_url = upload_to_s3(save_excel_name, upload_bucket_path(st.user['name'], st.user['sub'], 'excel', 'fish_and_invert', f"{data_id}_{file_name}"))
                 if excel_url:
                     st.toast(f"Excel Uploaded", icon='✅')
                 else:
                     download_capability = False
                     # save the image
-                image_url = upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.experimental_user['name'], st.experimental_user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
+                image_url = upload_to_s3(FISH_INVERT_IMAGE, upload_bucket_path(st.user['name'], st.user['sub'], 'image', 'fish_and_invert', f"{data_id}_{file_name}"))
                 if image_url:
                     st.toast(f"Image Uploaded", icon='✅')
                 else:
                     download_capability = False
                 # add a record to the database
                 if download_capability:
-                    db_response = add_record(DB_TABLE_NAME, data_id, st.experimental_user['sub'], st.experimental_user['name'], image_url, excel_url, "success")
+                    db_response = add_record(DB_TABLE_NAME, data_id, st.user['sub'], st.user['name'], image_url, excel_url, "success")
                     print(db_response)
                     if db_response['success']:
                         st.toast(f"Record Saved", icon='✅')
