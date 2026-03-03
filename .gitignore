@@ -62,4 +62,5 @@ serviceAccount.json
 
 # toml files
 *.toml
+*.yaml
 
