@@ -143,6 +143,7 @@ def substrate_excel_creation(response_data: dict, info_data: dict, excel_name: s
     cell_bold = workbook.add_format({'bold': True, 'center_across': True, 'border': True, 'font_name': 'Arial'})
     cell_normal = workbook.add_format({'center_across': True, 'border': True, 'font_name': 'Arial'})
     cell_normal_red = workbook.add_format({'center_across': True, 'border': True, 'font_color': 'red', 'font_name': 'Arial'})
+    cell_normal_red_with_percentage = workbook.add_format({'center_across': True, 'border': True, 'num_format': '0%', 'font_color': 'red', 'font_name': 'Arial'})
 
     # Add a border
     bold_border = workbook.add_format({'bold': True, 'border': True,'font_name': 'Arial', 'bg_color': '#29E37D'})
@@ -288,23 +289,23 @@ def substrate_excel_creation(response_data: dict, info_data: dict, excel_name: s
     worksheet.merge_range("L37:M37", "0", cell_normal)
     worksheet.merge_range("N37:O37", '=(F37+H37+J37+L37)/4', cell_normal_red)
 
-    worksheet.merge_range("F38:G38", '=IF(B52=0,0,F36/B52)', cell_normal_red)
-    worksheet.merge_range("H38:I38", '=IF(D52=0,"0",H36/D52)', cell_normal_red)
-    worksheet.merge_range("J38:K38", '=IF(F52=0,"0",J36/F52)', cell_normal_red)
-    worksheet.merge_range("L38:M38", '=IF(H52=0,"0",L36/H52)', cell_normal_red)
-    worksheet.merge_range("N38:O38", '=(F38+H38+J38+L38)/4', cell_normal_red)
+    worksheet.merge_range("F38:G38", '=IF(B52=0,0,F36/B52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("H38:I38", '=IF(D52=0,"0",H36/D52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("J38:K38", '=IF(F52=0,"0",J36/F52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("L38:M38", '=IF(H52=0,"0",L36/H52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("N38:O38", '=(F38+H38+J38+L38)/4', cell_normal_red_with_percentage)
 
-    worksheet.merge_range("F39:G39", '=IF(B52=0,0,F37/B52)', cell_normal_red)
-    worksheet.merge_range("H39:I39", '=IF(D52=0,"0",H37/D52)', cell_normal_red)
-    worksheet.merge_range("J39:K39", '=IF(F52=0,"0",J37/F52)', cell_normal_red)
-    worksheet.merge_range("L39:M39", '=IF(H52=0,"0",L37/H52)', cell_normal_red)
-    worksheet.merge_range("N39:O39", '=(F39+H39+J39+L39)/4', cell_normal_red)
+    worksheet.merge_range("F39:G39", '=IF(B52=0,0,F37/B52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("H39:I39", '=IF(D52=0,"0",H37/D52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("J39:K39", '=IF(F52=0,"0",J37/F52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("L39:M39", '=IF(H52=0,"0",L37/H52)', cell_normal_red_with_percentage)
+    worksheet.merge_range("N39:O39", '=(F39+H39+J39+L39)/4', cell_normal_red_with_percentage)
 
-    worksheet.merge_range("F40:G40", '=B54/40', cell_normal_red)
-    worksheet.merge_range("H40:I40", '=D54/40', cell_normal_red)
-    worksheet.merge_range("J40:K40", '=F54/40', cell_normal_red)
-    worksheet.merge_range("L40:M40", '=H54/40', cell_normal_red)
-    worksheet.merge_range("N40:O40", '=(F40+H40+J40+L40)/4', cell_normal_red)
+    worksheet.merge_range("F40:G40", '=B54/40', cell_normal_red_with_percentage)
+    worksheet.merge_range("H40:I40", '=D54/40', cell_normal_red_with_percentage)
+    worksheet.merge_range("J40:K40", '=F54/40', cell_normal_red_with_percentage)
+    worksheet.merge_range("L40:M40", '=H54/40', cell_normal_red_with_percentage)
+    worksheet.merge_range("N40:O40", '=(F40+H40+J40+L40)/4', cell_normal_red_with_percentage)
 
     worksheet.merge_range("A42:E42", "If mean RKC is > 10%, is the primary cause:", text_bold)
     worksheet.merge_range("G42:N42", "", workbook.add_format({'font_name': 'Arial', 'bg_color': '#969696'}))
@@ -392,7 +393,7 @@ def substrate_excel_creation(response_data: dict, info_data: dict, excel_name: s
 
 
     for len_ in range(51, 61):
-        worksheet.write(len_, 11, f"=J{len_+1}/4", LT_format_1)
+        worksheet.write(len_, 11, f"=ROUND(J{len_+1}/4, 2)", LT_format_1)
         worksheet.merge_range(f"M{len_+1}:N{len_+1}", f"=AVERAGE(P{len_+1}:S{len_+1})", LT_format_1)
         worksheet.write(len_, 14, f"=ROUND(STDEV(P{len_+1}:S{len_+1}), 4)", LT_format_1)  
         worksheet.write(len_, 15, f"=B{len_+1}/40", LT_format_2)
